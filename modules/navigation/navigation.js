@@ -90,16 +90,30 @@ class NavigationModule {
 
   switchModule(itemId, moduleId) {
     // Update active state
-    document.querySelectorAll('.nav-item').forEach(item => {
-      item.classList.remove('active');
-    });
-    document.querySelector(`[data-id="${itemId}"]`)?.classList.add('active');
+    this.setActiveModule(itemId);
 
     this.currentModule = itemId;
 
     // Call callback if provided
     if (this.onModuleChange) {
       this.onModuleChange(moduleId);
+    }
+  }
+
+  setActiveModule(itemId) {
+    // Update active state in navigation
+    document.querySelectorAll('.nav-item').forEach(item => {
+      item.classList.remove('active');
+    });
+    document.querySelector(`[data-id="${itemId}"]`)?.classList.add('active');
+  }
+
+  syncWithURL(moduleId) {
+    // Find menu item by module ID
+    const menuItem = menuItems.find(item => item.module === moduleId);
+    if (menuItem) {
+      this.setActiveModule(menuItem.id);
+      this.currentModule = menuItem.id;
     }
   }
 

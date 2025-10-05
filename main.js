@@ -19,7 +19,10 @@ class App {
     await initFirebase();
 
     // Initialize navigation
-    navigation.init((moduleId) => this.loadModule(moduleId));
+    navigation.init((moduleId) => this.loadModule(moduleId, true));
+
+    // Setup URL routing
+    this.setupRouting();
 
     // Setup auth listener
     onAuthStateChanged(auth, (user) => {
@@ -27,23 +30,56 @@ class App {
     });
   }
 
+  setupRouting() {
+    // Handle browser back/forward
+    window.addEventListener('popstate', (e) => {
+      const moduleId = e.state?.moduleId || this.getModuleFromURL();
+      if (moduleId) {
+        this.loadModule(moduleId, false);
+      }
+    });
+
+    // Handle initial URL
+    const initialModule = this.getModuleFromURL();
+    if (initialModule && this.currentUser) {
+      this.loadModule(initialModule, false);
+    }
+  }
+
+  getModuleFromURL() {
+    const path = window.location.pathname;
+    // Remove leading slash and get first segment
+    const segments = path.split('/').filter(s => s);
+    return segments[0] || null;
+  }
+
   handleAuthChange(user) {
     this.currentUser = user;
 
     if (user) {
       console.log('[App] User signed in:', user.uid);
-      // Load default module (Dashboard)
-      this.loadModule('board');
+      // Load module from URL or default to board
+      const moduleFromURL = this.getModuleFromURL();
+      this.loadModule(moduleFromURL || 'board', false);
     } else {
       console.log('[App] User signed out');
       // Still show app, but modules might be limited
-      this.loadModule('board');
+      this.loadModule('board', false);
     }
   }
 
-  async loadModule(moduleId) {
+  async loadModule(moduleId, updateURL = true) {
     console.log('[App] Loading module:', moduleId);
     this.currentModule = moduleId;
+
+    // Update URL if needed
+    if (updateURL) {
+      const newURL = `/${moduleId}`;
+      window.history.pushState({ moduleId }, '', newURL);
+    }
+
+    // Sync navigation active state
+    navigation.syncWithURL(moduleId);
 
     // Clear app container
     const app = document.getElementById('app');
