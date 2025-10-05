@@ -4,11 +4,12 @@
  */
 
 import { initFirebase, auth, onAuthStateChanged } from './firebase.js';
+import navigation from './modules/navigation/navigation.js';
 
 class App {
   constructor() {
-    this.modules = {};
     this.currentUser = null;
+    this.currentModule = null;
   }
 
   async init() {
@@ -16,6 +17,9 @@ class App {
 
     // Initialize Firebase
     await initFirebase();
+
+    // Initialize navigation
+    navigation.init((moduleId) => this.loadModule(moduleId));
 
     // Setup auth listener
     onAuthStateChanged(auth, (user) => {
@@ -28,41 +32,75 @@ class App {
 
     if (user) {
       console.log('[App] User signed in:', user.uid);
-      this.loadModules();
+      // Load default module (Dashboard)
+      this.loadModule('board');
     } else {
       console.log('[App] User signed out');
-      this.showAuthUI();
+      // Still show app, but modules might be limited
+      this.loadModule('board');
     }
   }
 
-  showAuthUI() {
+  async loadModule(moduleId) {
+    console.log('[App] Loading module:', moduleId);
+    this.currentModule = moduleId;
+
+    // Clear app container
     const app = document.getElementById('app');
-    app.innerHTML = `
-      <div class="auth-container">
-        <h1>Project73 v2</h1>
-        <p>Clean. Modern. Modular.</p>
-        <button id="sign-in-btn">Sign in with Google</button>
-      </div>
-    `;
+    app.innerHTML = '<div class="loading">Načítám...</div>';
 
-    document.getElementById('sign-in-btn').addEventListener('click', () => {
-      this.signIn();
-    });
-  }
-
-  async signIn() {
-    const { signInWithPopup, GoogleAuthProvider } = await import('./firebase.js');
-    const provider = new GoogleAuthProvider();
     try {
-      await signInWithPopup(auth, provider);
-    } catch (error) {
-      console.error('[App] Sign in error:', error);
-    }
-  }
+      switch (moduleId) {
+        case 'board':
+          const { initBoard } = await import('./modules/board/board.js');
+          initBoard();
+          break;
 
-  async loadModules() {
-    const { initBoard } = await import('./modules/board/board.js');
-    initBoard();
+        case 'deploy':
+          const { initDeploy } = await import('./modules/deploy/deploy.js');
+          initDeploy();
+          break;
+
+        case 'notes':
+          const { initNotes } = await import('./modules/notes/notes.js');
+          initNotes();
+          break;
+
+        case 'grid':
+        case 'calendar':
+        case 'assets':
+        case 'gallery':
+        case 'banners':
+        case 'mobile':
+          // Placeholder for future modules
+          app.innerHTML = `
+            <div style="padding: 3rem; text-align: center;">
+              <h1 style="font-size: 3rem; margin-bottom: 1rem;">🚧</h1>
+              <h2 style="color: #667eea; margin-bottom: 0.5rem;">Modul "${moduleId}"</h2>
+              <p style="color: #5e6c84;">Tento modul bude implementován brzy...</p>
+            </div>
+          `;
+          break;
+
+        default:
+          app.innerHTML = `
+            <div style="padding: 3rem; text-align: center;">
+              <h1 style="font-size: 3rem; margin-bottom: 1rem;">❓</h1>
+              <h2 style="color: #eb5a46; margin-bottom: 0.5rem;">Neznámý modul</h2>
+              <p style="color: #5e6c84;">Modul "${moduleId}" nebyl nalezen.</p>
+            </div>
+          `;
+      }
+    } catch (error) {
+      console.error('[App] Error loading module:', error);
+      app.innerHTML = `
+        <div style="padding: 3rem; text-align: center;">
+          <h1 style="font-size: 3rem; margin-bottom: 1rem;">⚠️</h1>
+          <h2 style="color: #eb5a46; margin-bottom: 0.5rem;">Chyba při načítání</h2>
+          <p style="color: #5e6c84;">${error.message}</p>
+        </div>
+      `;
+    }
   }
 }
 

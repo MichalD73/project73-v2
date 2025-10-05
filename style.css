@@ -13,20 +13,27 @@ body {
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
   background: #f8fafc;
   color: #0f172a;
+  margin: 0;
+  padding: 0;
 }
 
 #app {
   width: 100%;
-  min-height: 100vh;
 }
 
-#loading {
+.loading {
   display: flex;
   align-items: center;
   justify-content: center;
-  min-height: 100vh;
-  font-size: 18px;
+  min-height: calc(100vh - 64px);
+  font-size: 1.125rem;
   color: #64748b;
+  animation: pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 0.5; }
+  50% { opacity: 1; }
 }
 
 .auth-container {

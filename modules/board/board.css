@@ -1,37 +1,11 @@
-/* Dashboard View Styles */
-
-/* Hide other views when dashboard is active */
-body.view-dashboard #sidebar,
-body.view-dashboard #detail-panel,
-body.view-dashboard #grid-container,
-body.view-dashboard #calendar-view,
-body.view-dashboard #assets-view,
-body.view-dashboard #gallery-view,
-body.view-dashboard #goal-canvas-view,
-body.view-dashboard #snippet-library-view,
-body.view-dashboard #notes-app,
-body.view-dashboard #banners-view,
-body.view-dashboard #mobile-view,
-body.view-dashboard #manifest-view,
-body.view-dashboard #mindmap-view,
-body.view-dashboard #super-modul-view {
-  display: none !important;
-}
-
-/* Show dashboard view when active */
-body.view-dashboard #dashboard-view {
-  display: block !important;
-}
-
-.workspace-dashboard {
-  background: #f5f6f8;
-  min-height: calc(100vh - 52px);
-  padding: 2rem;
-}
+/* Dashboard Module Styles - Project73 v2 */
 
 .dashboard-container {
   max-width: 1800px;
   margin: 0 auto;
+  padding: 2rem;
+  background: #f5f6f8;
+  min-height: 100vh;
 }
 
 .dashboard-header {
