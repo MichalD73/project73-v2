@@ -19,25 +19,26 @@ window.firebase = {
 export async function initNotes() {
   console.log('🗒️  Initializing Notes Module (Original UI)...');
 
-  // Wait for Quill and NotesApp to load
-  await waitForDependencies();
-
   // Get container
   const container = document.getElementById('module-content');
   if (!container) return;
 
-  // Add notes app container
+  // Add notes app container immediately (empty UI shows while loading)
   container.innerHTML = '<div id="notes-app"></div>';
 
   // Add body class for styling
   document.body.classList.add('view-notes');
 
-  // Initialize original NotesApp
-  if (window.NotesApp && typeof window.NotesApp.init === 'function') {
-    window.NotesApp.init();
-  } else {
-    console.error('NotesApp not available or init not found!');
-  }
+  // Wait for dependencies in background, then initialize
+  waitForDependencies().then(() => {
+    if (window.NotesApp && typeof window.NotesApp.init === 'function') {
+      window.NotesApp.init();
+    } else {
+      console.error('NotesApp not available or init not found!');
+    }
+  }).catch(error => {
+    console.error('Failed to load NotesApp:', error);
+  });
 }
 
 async function waitForDependencies() {
