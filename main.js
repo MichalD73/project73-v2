@@ -61,16 +61,11 @@ class App {
   }
 
   async loadModules() {
-    const app = document.getElementById('app');
-    app.innerHTML = `
-      <div class="main-container">
-        <nav id="nav"></nav>
-        <main id="content"></main>
-      </div>
-    `;
-
-    // TODO: Load modules dynamically
-    console.log('[App] Modules loaded');
+    // Dashboard module initializes itself
+    if (window.DashboardView && typeof window.DashboardView.show === 'function') {
+      window.DashboardView.show();
+    }
+    console.log('[App] Dashboard loaded');
   }
 }
 
