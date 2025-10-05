@@ -61,11 +61,8 @@ class App {
   }
 
   async loadModules() {
-    // Dashboard module initializes itself
-    if (window.DashboardView && typeof window.DashboardView.show === 'function') {
-      window.DashboardView.show();
-    }
-    console.log('[App] Dashboard loaded');
+    const { initBoard } = await import('./modules/board/board.js');
+    initBoard();
   }
 }
 
