@@ -100,6 +100,9 @@ class NotesModule {
     // Render UI
     this.renderUI();
 
+    // Wait for Quill to load from CDN
+    await this.waitForQuill();
+
     // Initialize Quill editor
     this.initializeQuill();
 
@@ -115,6 +118,17 @@ class NotesModule {
         this.cleanup();
       }
     });
+  }
+
+  async waitForQuill() {
+    let attempts = 0;
+    while (!window.Quill && attempts < 50) {
+      await new Promise(resolve => setTimeout(resolve, 100));
+      attempts++;
+    }
+    if (!window.Quill) {
+      throw new Error('Quill failed to load from CDN');
+    }
   }
 
   loadPreferences() {
