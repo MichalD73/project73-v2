@@ -102,15 +102,27 @@ export async function initNotes() {
   // Add body class for styling
   document.body.classList.add('view-notes');
 
-  // Wait for dependencies in background, then initialize
+  // IMPORTANT: Clear the skeleton and let NotesApp render itself
+  // We need to do this synchronously after dependencies load
   waitForDependencies().then(() => {
     if (window.NotesApp && typeof window.NotesApp.init === 'function') {
+      console.log('✅ Initializing NotesApp...');
       window.NotesApp.init();
     } else {
-      console.error('NotesApp not available or init not found!');
+      console.error('❌ NotesApp not available!');
+      // Show error in UI
+      const app = document.getElementById('notes-app');
+      if (app) {
+        app.innerHTML = `
+          <div style="padding: 3rem; text-align: center;">
+            <h2 style="color: #ef4444;">Chyba načítání poznámek</h2>
+            <p style="color: #64748b;">NotesApp se nepodařilo načíst. Zkuste obnovit stránku.</p>
+          </div>
+        `;
+      }
     }
   }).catch(error => {
-    console.error('Failed to load NotesApp:', error);
+    console.error('Failed to load dependencies:', error);
   });
 }
 
