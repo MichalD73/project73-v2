@@ -103,9 +103,6 @@ class NotesModule {
     // Wait for Quill to load from CDN
     await this.waitForQuill();
 
-    // Initialize Quill editor
-    this.initializeQuill();
-
     // Attach event listeners
     this.attachEventListeners();
 
@@ -118,6 +115,9 @@ class NotesModule {
         this.cleanup();
       }
     });
+
+    // Initialize Quill editor (lazy - will be done when needed)
+    // We don't initialize it here because the editor surface is hidden
   }
 
   async waitForQuill() {
@@ -272,35 +272,46 @@ class NotesModule {
       return;
     }
 
-    this.quill = new Quill(this.elements.quillEditor, {
-      theme: 'snow',
-      modules: {
-        toolbar: TOOLBAR_OPTIONS
-      },
-      placeholder: 'Začněte psát...'
-    });
+    if (!this.elements.quillEditor) {
+      console.error('Quill editor container not found!');
+      return;
+    }
 
-    // Handle text changes with auto-save
-    this.quill.on('text-change', () => {
-      if (this.suppressEditorChange) return;
+    try {
+      this.quill = new Quill(this.elements.quillEditor, {
+        theme: 'snow',
+        modules: {
+          toolbar: TOOLBAR_OPTIONS
+        },
+        placeholder: 'Začněte psát...'
+      });
 
-      this.editorDirty = true;
-      this.updateStatus('Neuloženo');
+      // Handle text changes with auto-save
+      this.quill.on('text-change', () => {
+        if (this.suppressEditorChange) return;
 
-      // Clear existing timer
-      if (this.autoSaveTimer) {
-        clearTimeout(this.autoSaveTimer);
-      }
+        this.editorDirty = true;
+        this.updateStatus('Neuloženo');
 
-      // Set new auto-save timer
-      this.autoSaveTimer = setTimeout(() => {
-        this.autoSaveNote();
-      }, AUTO_SAVE_DELAY_MS);
-    });
+        // Clear existing timer
+        if (this.autoSaveTimer) {
+          clearTimeout(this.autoSaveTimer);
+        }
 
-    // Handle image uploads
-    const toolbar = this.quill.getModule('toolbar');
-    toolbar.addHandler('image', () => this.handleImageUpload());
+        // Set new auto-save timer
+        this.autoSaveTimer = setTimeout(() => {
+          this.autoSaveNote();
+        }, AUTO_SAVE_DELAY_MS);
+      });
+
+      // Handle image uploads
+      const toolbar = this.quill.getModule('toolbar');
+      toolbar.addHandler('image', () => this.handleImageUpload());
+
+      console.log('✅ Quill editor initialized successfully');
+    } catch (error) {
+      console.error('Failed to initialize Quill:', error);
+    }
   }
 
   attachEventListeners() {
@@ -504,8 +515,10 @@ class NotesModule {
     const note = { id: docRef.id, ...newNote };
     this.loadNoteIntoEditor(note);
 
-    // Focus editor
-    this.quill.focus();
+    // Focus editor (if Quill is initialized)
+    if (this.quill) {
+      this.quill.focus();
+    }
   }
 
   async deleteCurrentNote() {
@@ -529,9 +542,22 @@ class NotesModule {
   }
 
   loadNoteIntoEditor(note) {
-    if (!this.quill) return;
+    // Initialize Quill if not already done
+    if (!this.quill) {
+      this.initializeQuill();
+    }
+
+    if (!this.quill) {
+      console.error('Failed to initialize Quill editor');
+      return;
+    }
 
     this.suppressEditorChange = true;
+
+    // Show editor first (Quill needs visible container)
+    this.elements.editorEmpty.style.display = 'none';
+    this.elements.editorSurface.style.display = 'block';
+    this.elements.deleteNoteBtn.style.display = 'block';
 
     // Load content
     if (note.content && note.content.ops) {
@@ -544,11 +570,6 @@ class NotesModule {
 
     this.editorDirty = false;
     this.suppressEditorChange = false;
-
-    // Show editor
-    this.elements.editorEmpty.style.display = 'none';
-    this.elements.editorSurface.style.display = 'block';
-    this.elements.deleteNoteBtn.style.display = 'block';
 
     this.updateStatus('Připraveno');
     this.renderNotes(); // Re-render to highlight
